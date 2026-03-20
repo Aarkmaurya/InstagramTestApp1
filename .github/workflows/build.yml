@@ -15,24 +15,36 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y python3-pip zip unzip openjdk-17-jdk git
-
-    - name: Install Buildozer
-      run: |
-        pip3 install buildozer
+        sudo apt install -y python3-pip zip unzip openjdk-17-jdk git libffi-dev libssl-dev
+        pip3 install --user buildozer
 
     - name: Install Android SDK
       run: |
-        mkdir -p $HOME/android-sdk
-        cd $HOME/android-sdk
+        # 1. सही डायरेक्टरी स्ट्रक्चर बनाना
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        cd $HOME/android-sdk/cmdline-tools
+        
+        # 2. डाउनलोड और अनज़िप
         wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-        unzip commandlinetools-linux-*.zip
-        mkdir -p cmdline-tools/latest
-        mv cmdline-tools/* cmdline-tools/latest/
-        yes | cmdline-tools/latest/bin/sdkmanager --licenses
-        cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+        unzip -q commandlinetools-linux-*.zip
+        
+        # 3. 'cmdline-tools' को 'latest' में बदलना (बिना खुद के अंदर मूव किए)
+        mv cmdline-tools latest
+        
+        # 4. पाथ सेट करना और लाइसेंस स्वीकार करना
+        export ANDROID_HOME=$HOME/android-sdk
+        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+        yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME
+        sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-33" "build-tools;33.0.0"
 
-    - name: Build APK
+    - name: Build APK with Buildozer
       run: |
-        buildozer init
+        # Buildozer को बताना कि SDK कहाँ है
+        export ANDROID_HOME=$HOME/android-sdk
+        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+        
+        # अगर buildozer.spec पहले से है तो init की ज़रूरत नहीं, वरना एरर आएगा
+        if [ ! -f buildozer.spec ]; then buildozer init; fi
+        
+        # बिल्ड शुरू करें
         buildozer -v android debug
