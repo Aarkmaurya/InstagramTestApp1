@@ -38,14 +38,17 @@ jobs:
       run: |
         if [ ! -f buildozer.spec ]; then buildozer init; fi
         
-        # Spec फाइल में सही सेटिंग्स डालना
+        # Buildozer को मजबूर करना कि वह हमारा SDK/NDK इस्तेमाल करे
         sed -i 's|^#android.sdk_path =.*|android.sdk_path = /home/runner/android-sdk|' buildozer.spec
         sed -i 's|^#android.accept_sdk_license =.*|android.accept_sdk_license = True|' buildozer.spec
         sed -i 's|^android.api =.*|android.api = 33|' buildozer.spec
         sed -i 's|^#android.build_tools_ver =.*|android.build_tools_ver = 33.0.0|' buildozer.spec
         
+        # सबसे ज़रूरी कमांड: लाइसेंस को ग्लोबल लेवल पर स्वीकार करना
         export APP_ANDROID_ACCEPT_SDK_LICENSE=1
-        buildozer -v android debug
+        
+        # बिल्ड कमांड - इस बार 'yes' पाइप के साथ ताकि लाइसेंस अपने आप स्वीकार हो जाए
+        yes | buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
