@@ -24,15 +24,17 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt update
-        # यहाँ हमने libncurses5 को libncurses6 से बदल दिया है
         sudo apt install -y python3-pip zip unzip git build-essential \
         libffi-dev libssl-dev python3-dev libltdl-dev libtool autoconf automake \
-        libncurses6 libstdc++6
+        libncurses6 libstdc++6 ant  # हमने यहाँ ant जोड़ दिया है
         pip3 install --user cython==0.29.33 buildozer
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Build with Fixed Paths
       run: |
+        # पुरानी फाइल्स को साफ़ करना ताकि एरर न आए
+        rm -rf .buildozer/android/platform/apache-ant-1.9.4*
+        
         if [ ! -f buildozer.spec ]; then buildozer init; fi
         
         # रास्तों को ऑटो-फिक्स करना
@@ -43,7 +45,7 @@ jobs:
         # लाइसेंस स्वीकार करना
         yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME
         
-        # बिल्ड शुरू
+        # फाइनल बिल्ड (y दबाने की ज़रूरत नहीं पड़ेगी)
         yes y | buildozer -v android debug
 
     - name: Upload APK
