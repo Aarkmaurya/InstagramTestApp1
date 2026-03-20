@@ -29,19 +29,17 @@ jobs:
         pip3 install --user cython==0.29.33 buildozer
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: Pre-Accept All Licenses
-      run: |
-        # यहाँ हम Buildozer के फोल्डर के अंदर जाकर पहले ही सब "y" कर रहे हैं
-        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
-        yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME || true
-
-    - name: Final Build
+    - name: Build with Fixed Paths
       run: |
         if [ ! -f buildozer.spec ]; then buildozer init; fi
         
-        # ऑटो-लाइसेंस को Spec फाइल में पक्का करना
+        # Buildozer को बताना कि SDK कहाँ है (GitHub Actions का डिफॉल्ट पाथ)
+        sed -i "s|^#android.sdk_path =.*|android.sdk_path = $ANDROID_HOME|" buildozer.spec
+        sed -i "s|^#android.ndk_path =.*|android.ndk_path = $ANDROID_NDK_LATEST_HOME|" buildozer.spec
         sed -i 's|^#android.accept_sdk_license =.*|android.accept_sdk_license = True|' buildozer.spec
         
-        # बिना किसी सवाल के बिल्ड शुरू करें
-        export APP_ANDROID_ACCEPT_SDK_LICENSE=1
+        # जबरदस्ती लाइसेंस स्वीकार करवाना
+        yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME
+        
+        # बिल्ड शुरू
         buildozer -v android debug
