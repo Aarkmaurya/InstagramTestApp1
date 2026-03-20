@@ -18,16 +18,16 @@ jobs:
         sudo apt install -y python3-pip zip unzip openjdk-17-jdk git \
         libffi-dev libssl-dev build-essential python3-dev \
         libltdl-dev libtool autoconf automake
-        # यहाँ हम Cython और Buildozer इंस्टॉल कर रहे हैं
+        # यहाँ Cython और Buildozer इंस्टॉल हो रहे हैं
         pip3 install --user cython==0.29.33 buildozer
 
     - name: Install Android SDK
+    # यहाँ आपका पुराना SDK वाला फिक्स लगा हुआ है
       run: |
         mkdir -p $HOME/android-sdk/cmdline-tools
         cd $HOME/android-sdk/cmdline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
         unzip -q commandlinetools-linux-*.zip
-        # पुराने एरर को ठीक करने के लिए फोल्डर का नाम बदल रहे हैं
         mv cmdline-tools latest
         
         export ANDROID_HOME=$HOME/android-sdk
@@ -37,12 +37,15 @@ jobs:
 
     - name: Build APK with Buildozer
       run: |
-        # बिल्डोजर और साइथन को ढूंढने के लिए पाथ सेट करें
+        # यहाँ हमने Python टूल्स का रास्ता (Path) सेट किया है
         export PATH=$PATH:$HOME/.local/bin
         export ANDROID_HOME=$HOME/android-sdk
         
-        # अगर फाइल नहीं है तो बनाओ, वरना बिल्ड शुरू करो
         if [ ! -f buildozer.spec ]; then buildozer init; fi
-        
-        # यह कमांड APK बनाएगा
         buildozer -v android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: my-app-apk
+        path: bin/*.apk
