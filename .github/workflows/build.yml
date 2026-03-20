@@ -1,53 +1,16 @@
-name: Build APK
-
-on:
-  push:
-    branches: [ "main" ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-
-    - name: Install Dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y python3-pip zip unzip openjdk-17-jdk git \
-        libffi-dev libssl-dev build-essential python3-dev \
-        libltdl-dev libtool autoconf automake
-        sudo pip3 install cython==0.29.33 buildozer
-
-    - name: Install Android SDK
-      run: |
-        mkdir -p $HOME/android-sdk/cmdline-tools
-        cd $HOME/android-sdk/cmdline-tools
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-        unzip -q commandlinetools-linux-*.zip
-        mv cmdline-tools latest
-        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
-
-    - name: Accept Licenses
-      run: |
-        yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME
-
     - name: Configure and Build
       run: |
-        # अगर spec फाइल नहीं है, तो बनाओ
-        if [ ! -f buildozer.spec ]; then buildozer init; military; fi
+        # 1. अगर spec फाइल नहीं है, तो बनाओ
+        if [ ! -f buildozer.spec ]; then buildozer init; fi
         
-        # Spec फाइल में SDK पाथ को ऑटोमैटिक सेट करना
+        # 2. Spec फाइल को अपडेट करें ताकि वह हमारे वाले SDK का रास्ता देखे
+        # ध्यान दें: हमने पहले स्टेप में SDK 33.0.0 इंस्टॉल की है, तो यहाँ भी वही सेट करेंगे
         sed -i 's|^#android.sdk_path =.*|android.sdk_path = /home/runner/android-sdk|' buildozer.spec
         sed -i 's|^#android.accept_sdk_license =.*|android.accept_sdk_license = True|' buildozer.spec
+        sed -i 's|^android.api =.*|android.api = 33|' buildozer.spec
+        sed -i 's|^#android.build_tools_ver =.*|android.build_tools_ver = 33.0.0|' buildozer.spec
         
-        # बिल्ड शुरू करें
+        # 3. बिल्ड शुरू करें (बिना दोबारा पूछे)
+        export APP_ANDROID_ACCEPT_SDK_LICENSE=1
         buildozer -v android debug
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: my-app-apk
-        path: bin/*.apk
