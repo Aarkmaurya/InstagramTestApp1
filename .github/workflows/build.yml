@@ -1,3 +1,8 @@
+name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: my-app-apk
+        path: bin/*.apk
 name: Build APK
 
 on:
@@ -21,30 +26,24 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Install Buildozer & Cython
+    - name: Install Dependencies
       run: |
         sudo apt update
         sudo apt install -y python3-pip zip unzip git build-essential \
         libffi-dev libssl-dev python3-dev libltdl-dev libtool autoconf automake
-        # पक्का करें कि Cython का वही वर्जन है जो Buildozer को चाहिए
         pip3 install --user cython==0.29.33 buildozer
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: Build with Buildozer
+    - name: Final Build Attempt
       run: |
         if [ ! -f buildozer.spec ]; then buildozer init; fi
         
-        # Spec फाइल में SDK के रास्तों को GitHub के स्टैंडर्ड पाथ पर सेट करना
+        # ऑटो-एक्सेप्ट सेटिंग्स को स्पेसिफिकेशन फाइल में डालना
         sed -i 's|^#android.accept_sdk_license =.*|android.accept_sdk_license = True|' buildozer.spec
-        sed -i "s|^#android.sdk_path =.*|android.sdk_path = $ANDROID_HOME|" buildozer.spec
-        sed -i "s|^#android.ndk_path =.*|android.ndk_path = $ANDROID_NDK_LATEST_HOME|" buildozer.spec
         
-        # ऑटो-एक्सेप्ट फ्लैग के साथ बिल्ड शुरू करें
+        # एनवायरनमेंट वेरिएबल्स को एक्सपोर्ट करना जो बिल्डोजर को 'No' कहने से रोकेंगे
         export APP_ANDROID_ACCEPT_SDK_LICENSE=1
-        buildozer -v android debug
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: my-app-apk
-        path: bin/*.apk
+        export GRADLE_OPTS="-Dorg.gradle.daemon=false"
+        
+        # बिल्ड कमांड - इस बार 'yes' के साथ थोड़ा अलग तरीके से
+        yes y | buildozer -v android debug
