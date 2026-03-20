@@ -21,7 +21,7 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Install Dependencies
+    - name: Install Build Tools
       run: |
         sudo apt update
         sudo apt install -y python3-pip zip unzip git build-essential \
@@ -29,16 +29,19 @@ jobs:
         pip3 install --user cython==0.29.33 buildozer
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: Final Build Attempt
+    - name: Pre-Accept All Licenses
+      run: |
+        # यहाँ हम Buildozer के फोल्डर के अंदर जाकर पहले ही सब "y" कर रहे हैं
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
+        yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME || true
+
+    - name: Final Build
       run: |
         if [ ! -f buildozer.spec ]; then buildozer init; fi
         
-        # ऑटो-एक्सेप्ट सेटिंग्स को स्पेसिफिकेशन फाइल में डालना
+        # ऑटो-लाइसेंस को Spec फाइल में पक्का करना
         sed -i 's|^#android.accept_sdk_license =.*|android.accept_sdk_license = True|' buildozer.spec
         
-        # एनवायरनमेंट वेरिएबल्स को एक्सपोर्ट करना जो बिल्डोजर को 'No' कहने से रोकेंगे
+        # बिना किसी सवाल के बिल्ड शुरू करें
         export APP_ANDROID_ACCEPT_SDK_LICENSE=1
-        export GRADLE_OPTS="-Dorg.gradle.daemon=false"
-        
-        # बिल्ड कमांड - इस बार 'yes' के साथ थोड़ा अलग तरीके से
-        yes y | buildozer -v android debug
+        buildozer -v android debug
