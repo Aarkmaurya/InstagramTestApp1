@@ -18,6 +18,7 @@ jobs:
         sudo apt install -y python3-pip zip unzip openjdk-17-jdk git \
         libffi-dev libssl-dev build-essential python3-dev \
         libltdl-dev libtool autoconf automake
+        # Cython और Buildozer को सिस्टम लेवल पर इंस्टॉल करना
         sudo pip3 install cython==0.29.33 buildozer
 
     - name: Install Android SDK
@@ -27,31 +28,30 @@ jobs:
         wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
         unzip -q commandlinetools-linux-*.zip
         mv cmdline-tools latest
+        # पाथ सेट करना ताकि सिस्टम को पता चले SDK कहाँ है
         echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
         echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
-    - name: Accept Licenses
+    - name: Accept SDK Licenses
       run: |
+        # यहाँ हम पहले ही सारे Android लाइसेंस 'yes' कर रहे हैं
         yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME
 
-    - name: Configure and Build
+    - name: Configure and Build APK
       run: |
+        # अगर buildozer.spec नहीं है तो बनाओ
         if [ ! -f buildozer.spec ]; then buildozer init; fi
         
-        # Buildozer को मजबूर करना कि वह हमारा SDK/NDK इस्तेमाल करे
-        sed -i 's|^#android.sdk_path =.*|android.sdk_path = /home/runner/android-sdk|' buildozer.spec
+        # Spec फाइल में जरूरी बदलाव (ताकि वह लाइसेंस न मांगे)
         sed -i 's|^#android.accept_sdk_license =.*|android.accept_sdk_license = True|' buildozer.spec
-        sed -i 's|^android.api =.*|android.api = 33|' buildozer.spec
-        sed -i 's|^#android.build_tools_ver =.*|android.build_tools_ver = 33.0.0|' buildozer.spec
+        sed -i 's|^#android.sdk_path =.*|android.sdk_path = /home/runner/android-sdk|' buildozer.spec
         
-        # सबसे ज़रूरी कमांड: लाइसेंस को ग्लोबल लेवल पर स्वीकार करना
+        # यह सबसे महत्वपूर्ण लाइन है: 'yes' पाइप करके बिल्ड शुरू करना
         export APP_ANDROID_ACCEPT_SDK_LICENSE=1
-        
-        # बिल्ड कमांड - इस बार 'yes' पाइप के साथ ताकि लाइसेंस अपने आप स्वीकार हो जाए
         yes | buildozer -v android debug
 
-    - name: Upload APK
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: my-app-apk
+        name: My-Android-App
         path: bin/*.apk
