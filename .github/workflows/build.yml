@@ -12,26 +12,24 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Install dependencies
+    - name: Install Dependencies
       run: |
         sudo apt update
-        sudo apt install -y python3-pip zip unzip openjdk-17-jdk git libffi-dev libssl-dev
-        pip3 install --user buildozer
+        sudo apt install -y python3-pip zip unzip openjdk-17-jdk git \
+        libffi-dev libssl-dev build-essential python3-dev \
+        libltdl-dev libtool autoconf automake
+        # यहाँ हम Cython और Buildozer इंस्टॉल कर रहे हैं
+        pip3 install --user cython==0.29.33 buildozer
 
     - name: Install Android SDK
       run: |
-        # 1. सही डायरेक्टरी स्ट्रक्चर बनाना
         mkdir -p $HOME/android-sdk/cmdline-tools
         cd $HOME/android-sdk/cmdline-tools
-        
-        # 2. डाउनलोड और अनज़िप
         wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
         unzip -q commandlinetools-linux-*.zip
-        
-        # 3. 'cmdline-tools' को 'latest' में बदलना (बिना खुद के अंदर मूव किए)
+        # पुराने एरर को ठीक करने के लिए फोल्डर का नाम बदल रहे हैं
         mv cmdline-tools latest
         
-        # 4. पाथ सेट करना और लाइसेंस स्वीकार करना
         export ANDROID_HOME=$HOME/android-sdk
         export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
         yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME
@@ -39,12 +37,12 @@ jobs:
 
     - name: Build APK with Buildozer
       run: |
-        # Buildozer को बताना कि SDK कहाँ है
+        # बिल्डोजर और साइथन को ढूंढने के लिए पाथ सेट करें
+        export PATH=$PATH:$HOME/.local/bin
         export ANDROID_HOME=$HOME/android-sdk
-        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
         
-        # अगर buildozer.spec पहले से है तो init की ज़रूरत नहीं, वरना एरर आएगा
+        # अगर फाइल नहीं है तो बनाओ, वरना बिल्ड शुरू करो
         if [ ! -f buildozer.spec ]; then buildozer init; fi
         
-        # बिल्ड शुरू करें
+        # यह कमांड APK बनाएगा
         buildozer -v android debug
