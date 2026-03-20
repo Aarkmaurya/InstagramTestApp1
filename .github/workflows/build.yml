@@ -21,11 +21,12 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Install Build Tools
+    - name: Install Dependencies
       run: |
         sudo apt update
         sudo apt install -y python3-pip zip unzip git build-essential \
-        libffi-dev libssl-dev python3-dev libltdl-dev libtool autoconf automake
+        libffi-dev libssl-dev python3-dev libltdl-dev libtool autoconf automake \
+        libncurses5 libstdc++6
         pip3 install --user cython==0.29.33 buildozer
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
@@ -33,13 +34,19 @@ jobs:
       run: |
         if [ ! -f buildozer.spec ]; then buildozer init; fi
         
-        # Buildozer को बताना कि SDK कहाँ है (GitHub Actions का डिफॉल्ट पाथ)
+        # Buildozer को GitHub के SDK का रास्ता बताना (ताकि लाइसेंस एरर न आए)
         sed -i "s|^#android.sdk_path =.*|android.sdk_path = $ANDROID_HOME|" buildozer.spec
         sed -i "s|^#android.ndk_path =.*|android.ndk_path = $ANDROID_NDK_LATEST_HOME|" buildozer.spec
         sed -i 's|^#android.accept_sdk_license =.*|android.accept_sdk_license = True|' buildozer.spec
         
-        # जबरदस्ती लाइसेंस स्वीकार करवाना
+        # लाइसेंस स्वीकार करना
         yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME
         
-        # बिल्ड शुरू
+        # फाइनल बिल्ड कमांड
         buildozer -v android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: my-app-apk
+        path: bin/*.apk
