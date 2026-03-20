@@ -24,9 +24,10 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt update
+        # यहाँ हमने libncurses5 को libncurses6 से बदल दिया है
         sudo apt install -y python3-pip zip unzip git build-essential \
         libffi-dev libssl-dev python3-dev libltdl-dev libtool autoconf automake \
-        libncurses5 libstdc++6
+        libncurses6 libstdc++6
         pip3 install --user cython==0.29.33 buildozer
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
@@ -34,7 +35,7 @@ jobs:
       run: |
         if [ ! -f buildozer.spec ]; then buildozer init; fi
         
-        # Buildozer को GitHub के SDK का रास्ता बताना (ताकि लाइसेंस एरर न आए)
+        # रास्तों को ऑटो-फिक्स करना
         sed -i "s|^#android.sdk_path =.*|android.sdk_path = $ANDROID_HOME|" buildozer.spec
         sed -i "s|^#android.ndk_path =.*|android.ndk_path = $ANDROID_NDK_LATEST_HOME|" buildozer.spec
         sed -i 's|^#android.accept_sdk_license =.*|android.accept_sdk_license = True|' buildozer.spec
@@ -42,11 +43,12 @@ jobs:
         # लाइसेंस स्वीकार करना
         yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME
         
-        # फाइनल बिल्ड कमांड
-        buildozer -v android debug
+        # बिल्ड शुरू
+        yes y | buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: my-app-apk
+        name: my-instagram-test-app
         path: bin/*.apk
+
