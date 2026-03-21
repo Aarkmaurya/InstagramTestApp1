@@ -20,9 +20,9 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip autoconf libtool pkg-config zlib1g-dev \
+          sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev \
           libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev \
-          libxml2-dev libxslt1-dev
+          libxml2-dev libxslt1-dev gettext m4
           
       - name: Install Python & Buildozer
         run: |
@@ -31,17 +31,15 @@ jobs:
           
       - name: Build APK
         run: |
-          # SDK Conflicts hatane ke liye
           rm -rf .buildozer
+          # GitHub variables ko clear karein taaki toolchain confuse na ho
           unset ANDROID_SDK_ROOT
           unset ANDROID_NDK_ROOT
           unset ANDROID_HOME
           
-          # License Force Accept (Sabse important step)
           export APP_ANDROID_ACCEPT_SDK_LICENSE=1
-          mkdir -p ~/.android && touch ~/.android/repositories.cfg
-          
-          # Build Command
+          # Pehle clean build ensure karein
+          buildozer android clean
           buildozer -v android debug
         env:
           ACCEPT_SDK_LICENSE: "y"
