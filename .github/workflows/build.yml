@@ -7,34 +7,39 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          python-version: '3.9'
           
-      - name: Install Dependencies
+      - name: Install System Dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip autoconf libtool pkg-config zlib1g-dev \
-          libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip \
+          autoconf libtool pkg-config zlib1g-dev libncurses5-dev \
+          libncursesw5-dev cmake libffi-dev libssl-dev wget
           
-      - name: Install Python & Buildozer
+      - name: Install Python Packages
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install "cython<3.0" "buildozer<1.6.0"
+          pip install --upgrade pip
+          pip install cython buildozer
           
       - name: Build APK
         run: |
-          # Broken pipe error se bachne ke liye direct license accept
-          export APP_ANDROID_ACCEPT_SDK_LICENSE=1
-          buildozer -v android debug
-        env:
-          ACCEPT_SDK_LICENSE: "y"
+          # Remove any existing buildozer environment
+          rm -rf .buildozer
+          
+          # Create buildozer.spec if not exists
+          if [ ! -f buildozer.spec ]; then
+            buildozer init
+          fi
+          
+          # Build the APK
+          buildozer android debug
           
       - name: Upload APK
         uses: actions/upload-artifact@v4
