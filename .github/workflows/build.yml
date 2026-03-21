@@ -7,39 +7,44 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          python-version: '3.9'
+          java-version: '17'
+          distribution: 'temurin'
           
       - name: Install System Dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip \
-          autoconf libtool pkg-config zlib1g-dev libncurses5-dev \
-          libncursesw5-dev cmake libffi-dev libssl-dev wget
+          sudo apt install -y git zip unzip autoconf libtool pkg-config zlib1g-dev \
+          libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev \
+          libxml2-dev libxslt1-dev
           
-      - name: Install Python Packages
+      - name: Install Python & Buildozer
         run: |
-          pip install --upgrade pip
-          pip install cython buildozer
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "cython<3.0" "buildozer<1.6.0"
           
       - name: Build APK
         run: |
-          # Remove any existing buildozer environment
+          # SDK Conflicts hatane ke liye
           rm -rf .buildozer
+          unset ANDROID_SDK_ROOT
+          unset ANDROID_NDK_ROOT
+          unset ANDROID_HOME
           
-          # Create buildozer.spec if not exists
-          if [ ! -f buildozer.spec ]; then
-            buildozer init
-          fi
+          # License Force Accept (Sabse important step)
+          export APP_ANDROID_ACCEPT_SDK_LICENSE=1
+          mkdir -p ~/.android && touch ~/.android/repositories.cfg
           
-          # Build the APK
-          buildozer android debug
+          # Build Command
+          buildozer -v android debug
+        env:
+          ACCEPT_SDK_LICENSE: "y"
           
       - name: Upload APK
         uses: actions/upload-artifact@v4
