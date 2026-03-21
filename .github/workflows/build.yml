@@ -27,19 +27,23 @@ jobs:
       - name: Install Python & Buildozer
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install "cython<3.0" "buildozer<1.6.0"
+          # Stable versions for Ubuntu 24.04
+          python3 -m pip install "cython<3.0" "buildozer==1.5.0"
           
       - name: Build APK
         run: |
+          # 1. Purana incomplete folder delete karein
           rm -rf .buildozer
-          # GitHub variables ko clear karein taaki toolchain confuse na ho
+          
+          # 2. GitHub paths unset karein
           unset ANDROID_SDK_ROOT
           unset ANDROID_NDK_ROOT
           unset ANDROID_HOME
           
+          # 3. License bypass
           export APP_ANDROID_ACCEPT_SDK_LICENSE=1
-          # Pehle clean build ensure karein
-          buildozer android clean
+          
+          # 4. Direct build shuru (Clean command mat chalana)
           buildozer -v android debug
         env:
           ACCEPT_SDK_LICENSE: "y"
