@@ -30,4 +30,3 @@ jobs:
           unset ANDROID_HOME
           export APP_ANDROID_ACCEPT_SDK_LICENSE=1
           buildozer -v android debug
-Enter
