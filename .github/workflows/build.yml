@@ -19,14 +19,34 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+          sudo apt-get update
+          # libtinfo5 ko libtinfo6 se replace kiya gaya hai Ubuntu 24.04 ke liye
+          sudo apt-get install -y \
+            git \
+            zip \
+            unzip \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            zlib1g-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libtinfo6 \
+            cmake \
+            libffi-dev \
+            libssl-dev
+          
           python3 -m pip install --upgrade pip
-          python3 -m pip install --upgrade buildozer cython==0.29.33 git+https://github.com/kivy/python-for-android.git
+          # Cython ka specific version build errors rokne ke liye
+          python3 -m pip install --upgrade buildozer "cython<3.0" 
+          python3 -m pip install git+https://github.com/kivy/python-for-android.git
 
       - name: Build with Buildozer
         run: |
-          # Permission fix for gradlew
+          # Pehle purani failed build files clean karein
+          buildozer android clean
+          # Auto-accept licenses aur verbose mode check karne ke liye
           yes | buildozer -v android debug
         env:
           ACCEPT_SDK_LICENSE: "y"
