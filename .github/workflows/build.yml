@@ -22,28 +22,28 @@ jobs:
           sudo apt update
           sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev \
           libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev \
-          libxml2-dev libxslt1-dev gettext m4
+          libxml2-dev libxslt1-dev gettext m4 python3-pip
           
       - name: Install Python & Buildozer
         run: |
           python3 -m pip install --upgrade pip
-          # Stable versions for Ubuntu 24.04
           python3 -m pip install "cython<3.0" "buildozer==1.5.0"
           
       - name: Build APK
         run: |
-          # 1. Purana incomplete folder delete karein
+          # Sabse pehle purana kachra saaf karein
           rm -rf .buildozer
+          rm -rf bin
           
-          # 2. GitHub paths unset karein
+          # GitHub ke default variables ko poori tarah khatam karein
+          unset ANDROID_HOME
           unset ANDROID_SDK_ROOT
           unset ANDROID_NDK_ROOT
-          unset ANDROID_HOME
           
-          # 3. License bypass
+          # Force License Accept
           export APP_ANDROID_ACCEPT_SDK_LICENSE=1
           
-          # 4. Direct build shuru (Clean command mat chalana)
+          # Build shuru (Clean command KE BINA, taaki folder missing error na aaye)
           buildozer -v android debug
         env:
           ACCEPT_SDK_LICENSE: "y"
