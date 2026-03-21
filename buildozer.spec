@@ -2,24 +2,18 @@
 title = Instagram Test
 package.name = instagramtest
 package.domain = com.aarkmaurya
+source.dir = .
+source.include_exts = py,png,jpg,kv,atlas,txt
+version = 0.1
 
-# (Required) Use these specific versions for stability
-source.include_exts = py,png,jpg,kv,atlas
-requirements = python3,kivy==2.3.0,requests,urllib3
+requirements = python3,kivy==2.1.0,kivymd==1.1.1,requests,pyjnius
 
-orientation = portrait
-fullscreen = 0
-android.archs = arm64-v8a, armeabi-v7a
-android.allow_backup = True
-
-# (CRITICAL) API and NDK Settings
-android.api = 33
+android.permissions = INTERNET
+android.api = 31
 android.minapi = 21
 android.ndk = 25b
-android.ndk_api = 21
+orientation = portrait
+fullscreen = 0
 
-# (Permissions) 
-android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
-
-# (Fix for Java patches)
-p4a.branch = master
+[buildozer]
+log_level = 2
