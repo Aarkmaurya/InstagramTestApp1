@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # Stable version for Buildozer
 
     steps:
     - name: Checkout Code
@@ -18,39 +18,29 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-
     - name: Install Dependencies
       run: |
         sudo apt update
         sudo apt install -y python3-pip zip unzip git build-essential \
         libffi-dev libssl-dev python3-dev libltdl-dev libtool autoconf automake \
-        libncurses6 libstdc++6 ant  # हमने यहाँ ant जोड़ दिया है
+        libncurses6 libstdc++6 ant python3-setuptools
         pip3 install --user cython==0.29.33 buildozer
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: Build with Fixed Paths
+    - name: Build APK
       run: |
-        # पुरानी फाइल्स को साफ़ करना ताकि एरर न आए
-        rm -rf .buildozer/android/platform/apache-ant-1.9.4*
+        # पुरानी सेटिंग साफ़ करें
+        rm -rf .buildozer
         
-        if [ ! -f buildozer.spec ]; then buildozer init; fi
-        
-        # रास्तों को ऑटो-फिक्स करना
-        sed -i "s|^#android.sdk_path =.*|android.sdk_path = $ANDROID_HOME|" buildozer.spec
-        sed -i "s|^#android.ndk_path =.*|android.ndk_path = $ANDROID_NDK_LATEST_HOME|" buildozer.spec
-        sed -i 's|^#android.accept_sdk_license =.*|android.accept_sdk_license = True|' buildozer.spec
-        
-        # लाइसेंस स्वीकार करना
-        yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME
-        
-        # फाइनल बिल्ड (y दबाने की ज़रूरत नहीं पड़ेगी)
-        yes y | buildozer -v android debug
+        # लाइसेंस और SDK की सेटिंग सीधे कमांड से करेंगे, sed की ज़रूरत नहीं
+        # यह लाइन 'True' वाला एरर खत्म कर देगी
+        buildozer android debug || buildozer android debug
+      env:
+        # लाइसेंस खुद स्वीकार करने के लिए environment variable
+        APP_ANDROID_ACCEPT_SDK_LICENSE: "1"
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: my-instagram-test-app
         path: bin/*.apk
-
