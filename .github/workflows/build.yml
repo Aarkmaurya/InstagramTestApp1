@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK V3 (Fresh & Fast)
 on:
   push:
     branches: [ main ]
@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04  # 👈 Maine version change kiya hai, 22.04 zyada stable hai Buildozer ke liye
+    runs-on: ubuntu-22.04 # Stable version
     steps:
       - uses: actions/checkout@v4
 
@@ -21,33 +21,30 @@ jobs:
           sudo apt update
           sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev \
           libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev \
-          libxml2-dev libxslt1-dev gettext m4 python3-pip python3-setuptools
+          libxml2-dev libxslt1-dev gettext m4 python3-pip python3-setuptools \
+          libsqlite3-dev sqlite3 # Database aur SQLite support ke liye zaroori
 
-      - name: Install Python Tools
+      - name: Install Python Build Tools
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install "cython<3.0" "buildozer==1.5.0" "sh"
 
-      - name: Build APK
+      - name: Build with Buildozer
         run: |
-          # Sab kuch fresh start
+          # Purani cache aur environment clear karna
           rm -rf .buildozer
+          rm -rf ~/.buildozer
           
-          # Force clear GitHub paths (Inki wajah se hi error aa raha tha)
-          export ANDROID_HOME=""
-          export ANDROID_SDK_ROOT=""
-          export ANDROID_NDK_ROOT=""
-          
-          # License automatically accept karein
+          # Android SDK licenses auto-accept karna
           export APP_ANDROID_ACCEPT_SDK_LICENSE=1
           
-          # Build shuru
+          # Build process start (Verbose mode)
           buildozer -v android debug
         env:
           ACCEPT_SDK_LICENSE: "y"
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Instagram-Test-APK
+          name: Insta-Test-V3-APK
           path: bin/*.apk
